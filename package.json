@@ -1,0 +1,25 @@
+{
+  "name": "locus-classes",
+  "version": "1.0.0",
+  "description": "locus classes site",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manishprince708/locus-classes.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/manishprince708/locus-classes/issues"
+  },
+  "homepage": "https://github.com/manishprince708/locus-classes#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.13.2"
+  }
+}
