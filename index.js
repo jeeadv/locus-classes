@@ -3,8 +3,8 @@ import app from "./app.js"
 
 ( async () => {
     try {
-        await mongoose.connect("mongodb://localhost:27017/gitsetup")
-        console.log("DB CONNECTED");
+        //await mongoose.connect("mongodb://localhost:27017/gitsetup")
+        //console.log("DB CONNECTED");
 
         const onListening = () => {
             console.log("Listening on PORT 5000");
