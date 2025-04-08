@@ -39,6 +39,11 @@ app.post("/user/signup", (request, response, next) => {
     console.log("End /user/signup");
 });
 
+app.get("/user", (request, response, next) => {
+    console.log("Welcome to Goa Singham!");
+    response.json({ message: "Welcome to Goa Singham!" });
+});
+
 function isUserExist(user) {
     console.log("user existence check");
     return usersMap.has(user["username"]);
