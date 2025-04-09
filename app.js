@@ -3,9 +3,9 @@ import express from "express";
 const app = express()
 app.use(express.json())
 
-export default app
+import connectionPool from './db.mjs'
 
-var usersMap = new Map();
+export default app
 
 app.post("/user/login", (request, response, next) => {
     console.log(request.body);
@@ -21,7 +21,7 @@ app.post("/user/login", (request, response, next) => {
     else {
         response.json({ message: "User does not exists." });
     }
-    console.log(usersMap);
+
     console.log("End /user/login");
 });
 
@@ -35,7 +35,7 @@ app.post("/user/signup", (request, response, next) => {
     else {
         response.json({ message: "User already exists." });
     }
-    console.log(usersMap);
+
     console.log("End /user/signup");
 });
 
@@ -46,16 +46,58 @@ app.get("/user", (request, response, next) => {
 
 function isUserExist(user) {
     console.log("user existence check");
-    return usersMap.has(user["username"]);
+    const sql = 'SELECT * FROM users';
+    connectionPool.promise().query(sql, (err, results) => {
+        if (err) {
+            console.error('Error reading data:', err);
+            return;
+        }
+        console.log('Data retrieved successfully:');
+        console.log(results);
+        results.forEach(function (result) {
+            console.log(result["username"] + " " + result["password"]);
+            if (result["username"] == user["username"]) {
+                console.log("Found!");
+                return true;
+            }
+        });
+    });
+    console.log("Not Found!");
+    return false;
 }
 
 function isValidUser(user) {
-    console.log("user validity check");
-    return usersMap.get(user["username"]) == user["password"];
+    const sql = 'SELECT * FROM users';
+    connectionPool.promise().query(sql, (err, results) => {
+        if (err) {
+            console.error('Error reading data:', err);
+            return;
+        }
+        console.log('Data retrieved successfully:');
+        console.log(results);
+        results.forEach(function (result) {
+            console.log(result["username"] + " " + result["password"]);
+            if (result["username"] == user["username"] && result["password"] == user["password"]) {
+                console.log("Found!");
+                return true;
+            }
+        });
+    });
+    console.log("Not Found!");
+    return false;
 }
 
 function onBoardUser(user) {
-    usersMap.set(user["username"], user["password"]);
+    const sql = 'INSERT INTO users (username, password) VALUES (?, ?)';
+    const values = [user["username"], user["password"]];
+
+    connectionPool.promise().query(sql, values, (err, result) => {
+      if (err) {
+        console.error('Error inserting data:', err);
+        return;
+      }
+      console.log('Data inserted successfully. Affected rows:', result.affectedRows);
+    });
     console.log("user added");
 }
 
