@@ -1,105 +1,95 @@
 import express from "express";
+import connectionPool from './db.mjs';
 
-const app = express()
-app.use(express.json())
+const app = express();
+app.use(express.json());
 
-import connectionPool from './db.mjs'
 
-export default app
+app.post("/user/login", async (req, res) => {
+  const user = req.body;
+  console.log("Start /user/login");
 
-app.post("/user/login", (request, response, next) => {
-    console.log(request.body);
-    console.log("Start /user/login");
-    if (isUserExist(request.body)) {
-        if (isValidUser(request)) {
-            response.json({ message: "Welcome to locus classes." });
-        }
-        else {
-            response.json({ message: "Incorrect password" });
-        }
+  if (await isUserExist(user)) {
+    if (isValidUser(user)) {
+      res.json({ message: "Welcome to Locus Classes." });
+    } else {
+      res.json({ message: "Incorrect password" });
     }
-    else {
-        response.json({ message: "User does not exists." });
-    }
+  } else {
+    res.json({ message: "User does not exist." });
+  }
 
-    console.log("End /user/login");
+  console.log("End /user/login");
 });
 
-app.post("/user/signup", (request, response, next) => {
-    console.log(request.body);
-    console.log("Start /user/signup");
-    if (!isUserExist(request.body)) {
-        onBoardUser(request.body);
-        response.json({ message: "User added." });
-    }
-    else {
-        response.json({ message: "User already exists." });
-    }
+app.post("/user/signup", async (req, res) => {
+  const user = req.body;
+  console.log("Start /user/signup");
 
-    console.log("End /user/signup");
+  if (!(await isUserExist(user))) {
+    await onBoardUser(user);
+    res.json({ message: "User added." });
+  } else {
+    res.json({ message: "User already exists." });
+  }
+
+  console.log("End /user/signup");
 });
 
-app.get("/user", (request, response, next) => {
-    console.log("Welcome to Goa Singham!");
-    response.json({ message: "Welcome to Goa Singham!" });
+app.get("/user", (req, res) => {
+  res.json({ message: "Welcome to Goa Singham!" });
 });
 
-function isUserExist(user) {
-    console.log("user existence check");
-    const sql = 'SELECT * FROM users';
-    connectionPool.promise().query(sql, (err, results) => {
-        if (err) {
-            console.error('Error reading data:', err);
-            return;
-        }
-        console.log('Data retrieved successfully:');
-        console.log(results);
-        results.forEach(function (result) {
-            console.log(result["username"] + " " + result["password"]);
-            if (result["username"] == user["username"]) {
-                console.log("Found!");
-                return true;
-            }
-        });
-    });
-    console.log("Not Found!");
+async function isUserExist(user) {
+  console.log("Checking if user exists in DB...");
+
+  try {
+    const [results] = await connectionPool.query(
+      'SELECT * FROM users WHERE username = ?',
+      [user.username]
+    );
+
+    if (results.length > 0) {
+      return true;
+    }
     return false;
+  } catch (err) {
+    console.error('DB error in isUserExist:', err);
+    return false;
+  }
 }
 
-function isValidUser(user) {
-    const sql = 'SELECT * FROM users';
-    connectionPool.promise().query(sql, (err, results) => {
-        if (err) {
-            console.error('Error reading data:', err);
-            return;
-        }
-        console.log('Data retrieved successfully:');
-        console.log(results);
-        results.forEach(function (result) {
-            console.log(result["username"] + " " + result["password"]);
-            if (result["username"] == user["username"] && result["password"] == user["password"]) {
-                console.log("Found!");
-                return true;
-            }
-        });
-    });
-    console.log("Not Found!");
-    return false;
-}
+async function isValidUser(user) {
+  console.log("Checking user credentials...");
+  try {
+      const [results] = await connectionPool.query(
+        'SELECT * FROM users WHERE username = ? and password = ?',
+        [user.username, user.password]
+      );
 
-function onBoardUser(user) {
-    const sql = 'INSERT INTO users (username, password) VALUES (?, ?)';
-    const values = [user["username"], user["password"]];
-
-    connectionPool.promise().query(sql, values, (err, result) => {
-      if (err) {
-        console.error('Error inserting data:', err);
-        return;
+      if (results.length > 0) {
+        return true;
       }
-      console.log('Data inserted successfully. Affected rows:', result.affectedRows);
-    });
-    console.log("user added");
+      return false;
+    } catch (err) {
+      console.error('DB error in isUserExist:', err);
+      return false;
+    }
 }
 
+async function onBoardUser(user) {
+  console.log("Adding new user...");
 
+  try {
+    const [result] = await connectionPool.query(
+      'INSERT INTO users (username, password) VALUES (?, ?)',
+      [user.username, user.password]
+    );
 
+    console.log('User inserted. Affected rows:', result.affectedRows);
+  } catch (err) {
+    console.error('DB error in onBoardUser:', err);
+  }
+}
+
+export default app;
